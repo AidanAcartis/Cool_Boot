@@ -1,116 +1,77 @@
-# 🎥 Live Animated Wallpaper + Startup Sound on Ubuntu 24.04 LTS
+# Live Wallpaper Setup on Ubuntu 24.04 LTS
 
-Ce projet permet de :
-
-- Lancer automatiquement un **fond d’écran animé** au démarrage.
-- Jouer un **son** après que le démarrage est complètement terminé.
+This project sets up an **animated live wallpaper** on Ubuntu 24.04 LTS using `xwinwrap` and `mpv`, automatically launching at startup.
 
 ---
 
-## 📋 Prérequis
+## Requirements
 
-- Ubuntu 24.04 LTS
-- `xwinwrap` installé
-- `mpv` installé
-- `aplay` installé (pour jouer les fichiers `.wav`)
-- (Optionnel) Git si tu veux tout versionner
-
-Installe les outils nécessaires :
+First, install the necessary dependencies:
 
 ```bash
-sudo apt update
-sudo apt install xwinwrap mpv alsa-utils git
+sudo apt-get install xorg-dev build-essential libx11-dev x11proto-xext-dev libxrender-dev libxext-dev
 ```
 
----
-
-## 🛠️ Structure du projet
+Then, install **xwinwrap**:
 
 ```bash
-/home/aidan/Documents/wallpap/Live_wallpaps/
-├── all_day.sh          # Script principal lancé au démarrage
-├── the_script.sh       # Script qui lance le fond d’écran animé
-├── MPV/
-│   └— anata.mp4       # Vidéo du fond d’écran
-├── GIF/                # (Optionnel) GIFs
-└— Luffylaugh.wav      # Son joué au démarrage
+git clone https://github.com/mmhobi7/xwinwrap.git
+cd xwinwrap
+make
+sudo make install
+make clean
 ```
 
----
+`xwinwrap` is a tool that allows you to stick a video player window to your desktop background.
 
-## ⚙️ Scripts
+You also need `mpv` to play videos:
 
-### `the_script.sh`
+```bash
+sudo apt install mpv
+```
 
-Ce script :
 
-- TUE tout ancien fond animé (`xwinwrap`).
-- Démarre un nouveau fond animé en boucle.
+## Script to Launch Live Wallpaper
+
+Create a script, e.g., `the_script.sh`, with the following content:
 
 ```bash
 #!/bin/bash
 
 export DISPLAY=:0
 
-# Aller dans le répertoire contenant le fichier vidéo
-cd /home/aidan/Documents/wallpap/Live_wallpaps || exit 1
-
-  # Joue le son (en arrière-plan aussi)
-paplay /home/aidan/Documents/wallpap/Live_wallpaps/Luffylaugh.wav &
-
-# Stoppe seulement s'il existe
+# Kill xwinwrap if already running
 if pgrep xwinwrap > /dev/null; then
   killall xwinwrap
 fi
 
-# Lance le fond animé EN ARRIÈRE-PLAN, NON INTERACTIF
+# Change to the script's directory
+cd /home/aidan/Documents/wallpap/Live_wallpaps
+
+# Launch animated wallpaper
 xwinwrap -g 1920x1080+0+0 -ni -s -st -sp -b -nf -- \
 mpv --loop=inf --no-audio --vo=gpu --profile=low-latency \
 --no-border --force-window=yes --geometry=1920x1080 \
---no-osc --no-input-default-bindings --no-config ./MPV/anata.mp4
-
+--no-osc --no-input-default-bindings --no-config MPV/anata.mp4
 ```
 
-### `all_day.sh`
-
-Ce script :
-
-- Lance `the_script.sh`.
-- Joue un son à la fin du démarrage.
+✅ Make sure the script is executable:
 
 ```bash
-#!/bin/bash
-
-# Attendre que le serveur X soit prêt
-until xwininfo -root >/dev/null 2>&1; do sleep 1; done
-sleep 2
-
-# Se placer dans le dossier du script
-cd "$(dirname "$0")"
-
-# Lancer le fond animé
-bash ./the_script.sh &
-
-# Jouer un son après
-aplay Luffylaugh.wav
+chmod +x /home/aidan/Documents/wallpap/Live_wallpaps/the_script.sh
 ```
 
----
 
-## 📅 Lancement automatique au démarrage
+## Auto-Start at Login
 
-Créer un fichier `.desktop` :
+Create a `.desktop` file inside `~/.config/autostart/`.
 
-```bash
-nano ~/.config/autostart/live_wallpaper.desktop
-```
-
-Contenu :
+Example: `live_wallpaper.desktop`
 
 ```ini
 [Desktop Entry]
 Type=Application
-Exec=bash -c "until xwininfo -root >/dev/null 2>&1; do sleep 1; done; sleep 2; /home/aidan/Documents/wallpap/Live_wallpaps/all_day.sh"
+Exec=bash -c "until xwininfo -root >/dev/null 2>&1; do sleep 1; done; sleep 2; /home/aidan/Documents/wallpap/Live_wallpaps/the_script.sh"
 Hidden=false
 NoDisplay=false
 X-GNOME-Autostart-enabled=true
@@ -118,22 +79,49 @@ Name=Live Wallpaper
 Comment=Fond animé selon le jour
 ```
 
-Assure-toi que ton fichier `.desktop` est exécutable :
+This makes sure the script starts **only after the desktop environment is fully ready**.
 
-```bash
-chmod +x ~/.config/autostart/live_wallpaper.desktop
-```
 
----
+## Stopping the Live Wallpaper
 
-## 🔄 Arrêter le fond d’écran animé
-
-Si tu veux arrêter le fond animé manuellement :
+If you want to stop the wallpaper manually, run:
 
 ```bash
 killall xwinwrap
 ```
 
----
-> Réalisé avec ❤️ par Aidan.
+This will terminate the `xwinwrap` process and stop the video.
+
+
+## Playing a Sound After Boot
+
+If you want to play a sound file like `Luffylaugh.wav` after login:
+
+Add this to your startup script **after** launching the wallpaper:
+
+```bash
+aplay /home/aidan/Documents/wallpap/Live_wallpaps/Luffylaugh.wav
+```
+
+Or add a second `.desktop` file for it:
+
+```ini
+[Desktop Entry]
+Type=Application
+Exec=aplay /home/aidan/Documents/wallpap/Live_wallpaps/Luffylaugh.wav
+Hidden=false
+NoDisplay=false
+X-GNOME-Autostart-enabled=true
+Name=Play Sound
+Comment=Play Luffy Laugh Sound at startup
+```
+
+
+## Notes
+
+- Ensure your video (`anata.mp4`) exists exactly at `/home/aidan/Documents/wallpap/Live_wallpaps/MPV/anata.mp4`.
+- If you move your project, update the paths in both the script and `.desktop` file.
+- If you use multiple monitors, you may need to adjust the geometry (e.g., `3840x1080`).
+
+Enjoy your animated desktop! 🌟
 
