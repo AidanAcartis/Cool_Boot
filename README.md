@@ -135,22 +135,5 @@ killall xwinwrap
 ```
 
 ---
-
-## 💰 Bonus : GitHub
-
-Pour initialiser un dépôt Git :
-
-```bash
-cd /home/aidan/Documents/wallpap/Live_wallpaps
-git init
-git add .
-git commit -m "Initial commit"
-git branch -M main
-git remote add origin https://github.com/ton-user/ton-repo.git
-git push -u origin main
-```
-
----
-
 > Réalisé avec ❤️ par Aidan.
 
