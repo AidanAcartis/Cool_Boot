@@ -3,7 +3,7 @@
 export DISPLAY=:0
 
 # Aller dans le répertoire contenant le fichier vidéo
-cd /home/aidan/Documents/wallpap/Live_wallpaps || exit 1
+cd /home/haha/Documents/wallpap/Live_wallpaps || exit 1
 
 # Stoppe seulement s'il existe
 if pgrep xwinwrap > /dev/null; then
